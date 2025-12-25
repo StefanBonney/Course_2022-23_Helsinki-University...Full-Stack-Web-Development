@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import personService from './services/persons'
 
 
 
@@ -38,16 +38,14 @@ const App = () => {
   const [newFilter, setNewFilter] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('Response:', response); 
-        console.log('Data:', response.data);   
-        setPersons(response.data); 
+    console.log('effect')
+    personService
+      .getAll()
+      .then(initialPersons => {
+        console.log('promise fulfilled')
+        setPersons(initialPersons)
       })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-  }, []); ; // empty makes run only once after first render
+  }, []) // empty makes run only once after first render
 
   const handleNameChange = (event) => {setNewName(event.target.value)}
   const handleNumberChange = (event) => {setNewNumber(event.target.value)}
@@ -68,10 +66,10 @@ const App = () => {
     // debug: state after update (form-submission)
     //console.log('new person:', newPerson)
     //console.log('new persons list:', [...persons, newPerson])
-    axios
-      .post('http://localhost:3001/persons', newPerson)
-      .then(response => {
-        setPersons(persons.concat(response.data))
+    personService
+      .create(newPerson)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
     })
