@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import personService from './services/persons'
 
 
 
@@ -20,11 +20,12 @@ const PersonForm = ({ onSubmit, nameValue, numberValue, onChangeName, onChangeNu
 );
 
 //===========================================================[PersonsList]
-const PersonsList = ({ persons }) => (
+const PersonsList = ({ persons, onDelete }) => (
   <ul style={{ listStyle: 'none', padding: 0 }}>
     {persons.map(person => (
       <li key={person.name}>
         {person.name} {person.number}
+        <button onClick={() => onDelete(person.id, person.name)}>delete</button>
       </li>
     ))}
   </ul>
@@ -38,16 +39,14 @@ const App = () => {
   const [newFilter, setNewFilter] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('Response:', response); 
-        console.log('Data:', response.data);   
-        setPersons(response.data); 
+    console.log('effect')
+    personService
+      .getAll()
+      .then(initialPersons => {
+        console.log('promise fulfilled')
+        setPersons(initialPersons)
       })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-  }, []); ; // empty makes run only once after first render
+  }, []) // empty makes run only once after first render
 
   const handleNameChange = (event) => {setNewName(event.target.value)}
   const handleNumberChange = (event) => {setNewNumber(event.target.value)}
@@ -56,21 +55,42 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault()
+
     const existingPerson = persons.find(person => person.name === newName)
-      if (existingPerson) {
-        alert(`${newName} is already added to phonebook`)
-        return
+      if (existingPerson) 
+      {
+        if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) 
+        {
+          const updatedPerson = { ...existingPerson, number: newNumber }
+          //console.log('updating number for', existingPerson)
+          //console.log('new number', newNumber)
+          personService
+            .update(existingPerson.id, updatedPerson)
+            .then(returnedPerson => {
+              //console.log('server returned updated person:', returnedPerson)
+              setPersons(persons.map(person => person.id !== existingPerson.id ? person : returnedPerson))
+              setNewName('')
+              setNewNumber('')
+          })
+        }
+      } 
+      else 
+      {
+        const newPerson = { 
+        name: newName, 
+        number: newNumber 
+        }
+        // debug: state after update (form-submission)
+        //console.log('new person:', newPerson)
+        //console.log('new persons list:', [...persons, newPerson])
+        personService
+          .create(newPerson)
+          .then(returnedPerson => {
+            setPersons(persons.concat(returnedPerson))
+            setNewName('')
+            setNewNumber('')
+        })
       }
-    const newPerson = { 
-      name: newName, 
-      number: newNumber 
-    }
-    // debug: state after update (form-submission)
-    //console.log('new person:', newPerson)
-    //console.log('new persons list:', [...persons, newPerson])
-    setPersons(persons.concat(newPerson))
-    setNewName('')
-    setNewNumber('')
   }
 
   const filterPersons = (persons, filter) => {
@@ -81,6 +101,19 @@ const App = () => {
     );
   };
 
+  const deletePerson = (id, name) => {
+    //console.log('deletePerson called with:', { id, name })
+    if (window.confirm(`Delete ${name}?`)) {
+      personService
+        .remove(id)
+        .then(() => {
+          //console.log('Server deleted person, updating state')
+          setPersons(persons.filter(person => person.id !== id))
+          //console.log('State updated, re-render component')
+        })
+    }
+  }
+
   //###########################################################################################[RETURN]
   return (
     <div>
@@ -89,7 +122,7 @@ const App = () => {
       <h2>add a new</h2>
       <PersonForm onSubmit={addPerson} nameValue={newName} numberValue={newNumber} onChangeName={handleNameChange} onChangeNumber={handleNumberChange} />
       <h2>Numbers</h2>
-      <PersonsList persons={filterPersons(persons,newFilter)} />
+      <PersonsList persons={filterPersons(persons,newFilter)}  onDelete={deletePerson} />
     </div>
   )
 
