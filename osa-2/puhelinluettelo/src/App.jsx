@@ -20,11 +20,12 @@ const PersonForm = ({ onSubmit, nameValue, numberValue, onChangeName, onChangeNu
 );
 
 //===========================================================[PersonsList]
-const PersonsList = ({ persons }) => (
+const PersonsList = ({ persons, onDelete }) => (
   <ul style={{ listStyle: 'none', padding: 0 }}>
     {persons.map(person => (
       <li key={person.name}>
         {person.name} {person.number}
+        <button onClick={() => onDelete(person.id, person.name)}>delete</button>
       </li>
     ))}
   </ul>
@@ -83,6 +84,19 @@ const App = () => {
     );
   };
 
+  const deletePerson = (id, name) => {
+    //console.log('deletePerson called with:', { id, name })
+    if (window.confirm(`Delete ${name}?`)) {
+      personService
+        .remove(id)
+        .then(() => {
+          //console.log('Server deleted person, updating state')
+          setPersons(persons.filter(person => person.id !== id))
+          //console.log('State updated, re-render component')
+        })
+    }
+  }
+
   //###########################################################################################[RETURN]
   return (
     <div>
@@ -91,7 +105,7 @@ const App = () => {
       <h2>add a new</h2>
       <PersonForm onSubmit={addPerson} nameValue={newName} numberValue={newNumber} onChangeName={handleNameChange} onChangeNumber={handleNumberChange} />
       <h2>Numbers</h2>
-      <PersonsList persons={filterPersons(persons,newFilter)} />
+      <PersonsList persons={filterPersons(persons,newFilter)}  onDelete={deletePerson} />
     </div>
   )
 
