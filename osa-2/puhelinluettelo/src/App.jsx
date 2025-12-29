@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import personService from './services/persons'
+import Notification from './components/Notification'
 
 
 
@@ -37,6 +38,7 @@ const App = () => {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [newFilter, setNewFilter] = useState('');
+  const [successMessage, setSuccessMessage] = useState(null)
 
   useEffect(() => {
     console.log('effect')
@@ -71,6 +73,10 @@ const App = () => {
               setPersons(persons.map(person => person.id !== existingPerson.id ? person : returnedPerson))
               setNewName('')
               setNewNumber('')
+              setSuccessMessage(`Updated ${returnedPerson.name}'s number`)
+              setTimeout(() => {
+              setSuccessMessage(null)
+    }, 5000)
           })
         }
       } 
@@ -89,6 +95,10 @@ const App = () => {
             setPersons(persons.concat(returnedPerson))
             setNewName('')
             setNewNumber('')
+            setSuccessMessage(`Added ${returnedPerson.name}`)
+            setTimeout(() => {
+            setSuccessMessage(null)
+    }, 5000)
         })
       }
   }
@@ -118,6 +128,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={successMessage} />
       <FilterField filterValue={newFilter} onChange={handleFilterChange} /> 
       <h2>add a new</h2>
       <PersonForm onSubmit={addPerson} nameValue={newName} numberValue={newNumber} onChangeName={handleNameChange} onChangeNumber={handleNumberChange} />
