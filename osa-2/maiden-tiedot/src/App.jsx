@@ -8,7 +8,7 @@ const App = () => {
   // user's search input
   const [searchCountries, setSearchCountries] = useState('')
 
-  // state update (effect) -> fetch all countries once when componnt mounts
+  // state update (effect) -> fetch all countries once when component mounts
   useEffect(() => {
     console.log('fetching countries...')
     axios
