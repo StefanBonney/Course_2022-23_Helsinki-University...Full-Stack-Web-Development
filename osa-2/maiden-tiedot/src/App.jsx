@@ -24,6 +24,11 @@ const App = () => {
     setSearchCountries(event.target.value)
   }
 
+  // state update (event) -> show full details for a specific country on button click
+  const handleShowClick = (countryName) => {
+    setSearchCountries(countryName)
+  }
+
   // filter countries by name based on search term
   const filterCountries = (countries, searchTerm) => {
     // don't show anything if search is empty
@@ -45,7 +50,7 @@ const App = () => {
   return (
     <div>
       find countries <input value={searchCountries} onChange={handleSearchChange}/>
-      <Countries countries={countriesToShow}/>
+      <Countries countries={countriesToShow} handleShowClick={handleShowClick} />
     </div>
   )
 }
